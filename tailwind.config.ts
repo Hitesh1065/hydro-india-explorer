@@ -47,6 +47,16 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Water-themed colors
+        water: {
+          primary: "hsl(var(--water-primary))",
+          secondary: "hsl(var(--water-secondary))",
+          light: "hsl(var(--water-light))",
+          dark: "hsl(var(--water-dark))",
+        },
+        ocean: "hsl(var(--ocean-blue))",
+        river: "hsl(var(--river-blue))",
+        lake: "hsl(var(--lake-teal))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
