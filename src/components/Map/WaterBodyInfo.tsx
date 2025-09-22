@@ -1,142 +1,124 @@
 import React from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Fish, Thermometer, Droplets, Activity } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { X, Fish, Droplets, Clock, Info, Waves } from 'lucide-react';
 
 interface WaterBodyInfoProps {
   waterBody: any;
   onClose: () => void;
 }
 
-export const WaterBodyInfo: React.FC<WaterBodyInfoProps> = ({ waterBody, onClose }) => {
-  // Mock data - replace with actual Excel sheet data
-  const mockFishData = {
-    species: ['Rohu', 'Catla', 'Mrigal', 'Hilsa', 'Prawns'],
-    biodiversity: 85,
-    waterQuality: 'Good',
-    temperature: 26,
-    pH: 7.2,
-    oxygenLevel: 8.5,
-    pollution: 'Low',
-    fishingRecommendation: 'Excellent for fishing - ideal weather conditions'
+export const WaterBodyInfo = ({ waterBody, onClose }: WaterBodyInfoProps) => {
+  const properties = waterBody.properties;
+  
+  // Calculate fishing score based on multiple factors
+  const calculateFishingScore = () => {
+    let score = 0;
+    if (properties.waterQuality === 'Good') score += 30;
+    if (properties.waterQuality === 'Moderate') score += 20;
+    if (properties.fishTypes && properties.fishTypes.length > 3) score += 25;
+    if (properties.depth && parseInt(properties.depth) > 5) score += 20;
+    score += Math.min(properties.fishTypes?.length * 5 || 0, 25);
+    return Math.min(score, 100);
   };
 
-  const getQualityColor = (quality: string) => {
-    switch (quality.toLowerCase()) {
-      case 'excellent':
-        return 'bg-green-500';
-      case 'good':
-        return 'bg-blue-500';
-      case 'fair':
-        return 'bg-yellow-500';
-      case 'poor':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
+  const fishingScore = calculateFishingScore();
+  const scoreColor = fishingScore >= 80 ? 'text-green-500' : 
+                    fishingScore >= 60 ? 'text-yellow-500' : 'text-red-500';
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 md:left-4 md:right-auto md:w-96 z-20">
-      <Card className="bg-card/95 backdrop-blur-sm shadow-xl border border-border/50">
-        <div className="p-4">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-bold text-lg text-foreground">
-                {waterBody.properties?.name || 'Water Body'}
-              </h3>
-              <Badge variant="outline" className="mt-1 capitalize">
-                {waterBody.properties?.type || 'Unknown'}
-              </Badge>
-            </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
+    <div className="absolute bottom-4 left-4 z-20 bg-card/95 backdrop-blur-sm rounded-lg shadow-lg border border-border max-w-sm">
+      <div className="p-4 space-y-4">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="font-bold text-lg text-foreground">{properties.name}</h3>
+            <p className="text-sm text-muted-foreground capitalize">{properties.type}</p>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-8 w-8 p-0"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
 
-          {/* Fish Species */}
-          <div className="mb-4">
+        {/* Fishing Score */}
+        <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+          <div>
+            <div className="flex items-center space-x-2">
+              <Fish className={`h-5 w-5 ${scoreColor}`} />
+              <span className="font-semibold">Fishing Score</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Based on water quality, fish diversity & depth
+            </p>
+          </div>
+          <div className={`text-2xl font-bold ${scoreColor}`}>
+            {fishingScore}/100
+          </div>
+        </div>
+
+        {/* Water Details */}
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <Droplets className="h-4 w-4 text-blue-500" />
+            <span className="text-sm font-medium">Water Quality:</span>
+            <span className="text-sm text-muted-foreground">{properties.waterQuality}</span>
+          </div>
+          
+          {properties.depth && (
+            <div className="flex items-center space-x-2">
+              <Waves className="h-4 w-4 text-water-primary" />
+              <span className="text-sm font-medium">Depth:</span>
+              <span className="text-sm text-muted-foreground">{properties.depth}</span>
+            </div>
+          )}
+          
+          <div className="flex items-center space-x-2">
+            <Clock className="h-4 w-4 text-orange-500" />
+            <span className="text-sm font-medium">Best Time:</span>
+            <span className="text-sm text-muted-foreground">{properties.bestFishingTime}</span>
+          </div>
+        </div>
+
+        {/* Fish Types */}
+        {properties.fishTypes && properties.fishTypes.length > 0 && (
+          <div>
             <div className="flex items-center space-x-2 mb-2">
-              <Fish className="h-4 w-4 text-water-primary" />
-              <span className="font-semibold text-sm">Fish Species</span>
+              <Fish className="h-4 w-4 text-green-500" />
+              <span className="text-sm font-medium">Fish Species ({properties.fishTypes.length})</span>
             </div>
             <div className="flex flex-wrap gap-1">
-              {mockFishData.species.map((species, index) => (
-                <Badge key={index} variant="secondary" className="text-xs">
-                  {species}
+              {properties.fishTypes.map((fish: string, index: number) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {fish}
                 </Badge>
               ))}
             </div>
           </div>
+        )}
 
-          {/* Water Quality Metrics */}
-          <div className="space-y-3 mb-4">
+        {/* Fishing Tips */}
+        <div className="p-3 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg border border-blue-200/50">
+          <div className="flex items-start space-x-2">
+            <Info className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-muted-foreground">Biodiversity Index</span>
-                <span className="text-sm font-medium">{mockFishData.biodiversity}%</span>
-              </div>
-              <Progress value={mockFishData.biodiversity} className="h-2" />
+              <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Fishing Tips</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                {fishingScore >= 80 
+                  ? "Excellent spot! Try live bait near the deeper areas during recommended hours."
+                  : fishingScore >= 60 
+                  ? "Good fishing potential. Check weather conditions and use appropriate tackle."
+                  : "Challenging conditions. Consider alternative locations or wait for better weather."
+                }
+              </p>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Thermometer className="h-3 w-3 text-orange-500" />
-                  <span className="text-xs text-muted-foreground">Temperature</span>
-                </div>
-                <div className="text-sm font-medium">{mockFishData.temperature}°C</div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Droplets className="h-3 w-3 text-blue-500" />
-                  <span className="text-xs text-muted-foreground">pH Level</span>
-                </div>
-                <div className="text-sm font-medium">{mockFishData.pH}</div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Activity className="h-3 w-3 text-green-500" />
-                  <span className="text-xs text-muted-foreground">Oxygen</span>
-                </div>
-                <div className="text-sm font-medium">{mockFishData.oxygenLevel} mg/L</div>
-              </div>
-
-              <div className="space-y-2">
-                <span className="text-xs text-muted-foreground">Water Quality</span>
-                <Badge className={getQualityColor(mockFishData.waterQuality)}>
-                  {mockFishData.waterQuality}
-                </Badge>
-              </div>
-            </div>
-          </div>
-
-          {/* Fishing Recommendation */}
-          <div className="p-3 bg-gradient-to-r from-water-light/30 to-water-secondary/30 rounded-lg border border-water-primary/20">
-            <div className="flex items-start space-x-2">
-              <Fish className="h-4 w-4 text-water-primary mt-0.5 flex-shrink-0" />
-              <div>
-                <div className="font-semibold text-sm text-foreground mb-1">
-                  Fishing Recommendation
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {mockFishData.fishingRecommendation}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Data Source Note */}
-          <div className="mt-3 text-xs text-muted-foreground text-center">
-            Data from Excel sheet + Live APIs • Last updated: {new Date().toLocaleTimeString()}
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

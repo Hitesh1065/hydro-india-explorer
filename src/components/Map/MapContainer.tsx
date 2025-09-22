@@ -18,7 +18,21 @@ const MapContainer = () => {
   const [selectedWaterBody, setSelectedWaterBody] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showWeather, setShowWeather] = useState(true);
-  const [mapboxToken, setMapboxToken] = useState('');
+  const [mapboxToken, setMapboxToken] = useState(() => 
+    localStorage.getItem('mapboxToken') || ''
+  );
+  const [weatherApiKey, setWeatherApiKey] = useState(() => 
+    localStorage.getItem('weatherApiKey') || ''
+  );
+
+  // Save API keys to localStorage
+  useEffect(() => {
+    if (mapboxToken) localStorage.setItem('mapboxToken', mapboxToken);
+  }, [mapboxToken]);
+
+  useEffect(() => {
+    if (weatherApiKey) localStorage.setItem('weatherApiKey', weatherApiKey);
+  }, [weatherApiKey]);
 
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
@@ -47,7 +61,54 @@ const MapContainer = () => {
         type: 'geojson',
         data: {
           type: 'FeatureCollection',
-          features: [] // This would be populated with your Excel data
+          features: [
+            // Sample Indian water bodies - replace with your Excel data
+            {
+              type: 'Feature',
+              properties: {
+                name: 'Ganges River',
+                type: 'river',
+                fishTypes: ['Rohu', 'Catla', 'Mrigal', 'Hilsa'],
+                bestFishingTime: 'Early morning and evening',
+                waterQuality: 'Moderate',
+                depth: '15-30 meters'
+              },
+              geometry: {
+                type: 'LineString',
+                coordinates: [[78.9629, 25.3176], [88.3639, 22.5726]]
+              }
+            },
+            {
+              type: 'Feature',
+              properties: {
+                name: 'Dal Lake',
+                type: 'lake',
+                fishTypes: ['Schizothorax', 'Snow Trout', 'Carp'],
+                bestFishingTime: 'Dawn and dusk',
+                waterQuality: 'Good',
+                depth: '12 meters'
+              },
+              geometry: {
+                type: 'Point',
+                coordinates: [74.8370, 34.1218]
+              }
+            },
+            {
+              type: 'Feature',
+              properties: {
+                name: 'Vembanad Lake',
+                type: 'lake',
+                fishTypes: ['Pearl Spot', 'Prawns', 'Mullet'],
+                bestFishingTime: 'Morning hours',
+                waterQuality: 'Good',
+                depth: '6-8 meters'
+              },
+              geometry: {
+                type: 'Point',
+                coordinates: [76.3868, 9.5916]
+              }
+            }
+          ]
         }
       });
 
@@ -56,7 +117,33 @@ const MapContainer = () => {
         type: 'geojson',
         data: {
           type: 'FeatureCollection',
-          features: [] // Port locations
+          features: [
+            {
+              type: 'Feature',
+              properties: { name: 'Mumbai Port', type: 'major' },
+              geometry: { type: 'Point', coordinates: [72.8777, 18.9220] }
+            },
+            {
+              type: 'Feature',
+              properties: { name: 'Chennai Port', type: 'major' },
+              geometry: { type: 'Point', coordinates: [80.2707, 13.0827] }
+            },
+            {
+              type: 'Feature',
+              properties: { name: 'Kolkata Port', type: 'major' },
+              geometry: { type: 'Point', coordinates: [88.3639, 22.5726] }
+            },
+            {
+              type: 'Feature',
+              properties: { name: 'Kochi Port', type: 'major' },
+              geometry: { type: 'Point', coordinates: [76.2999, 9.9312] }
+            },
+            {
+              type: 'Feature',
+              properties: { name: 'Visakhapatnam Port', type: 'major' },
+              geometry: { type: 'Point', coordinates: [83.3209, 17.7231] }
+            }
+          ]
         }
       });
 
@@ -118,45 +205,80 @@ const MapContainer = () => {
     return () => map.current?.remove();
   }, [mapboxToken]);
 
-  if (!mapboxToken) {
+  if (!mapboxToken || !weatherApiKey) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-water-light to-water-secondary flex items-center justify-center">
-        <div className="bg-card p-8 rounded-lg shadow-lg max-w-md w-full mx-4">
+        <div className="bg-card p-8 rounded-lg shadow-lg max-w-lg w-full mx-4">
           <div className="text-center mb-6">
             <Waves className="h-12 w-12 text-water-primary mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-foreground">Connect Your Mapbox</h2>
+            <h2 className="text-2xl font-bold text-foreground">Setup API Keys</h2>
             <p className="text-muted-foreground mt-2">
-              Enter your Mapbox public token to explore India's water bodies
+              Enter your API keys to access the interactive map features
             </p>
           </div>
           
           <div className="space-y-4">
-            <Input
-              placeholder="pk.eyJ1IjoieW91ci11c2VybmFtZSIsImEiOiJ5b3VyLXRva2VuIn0..."
-              value={mapboxToken}
-              onChange={(e) => setMapboxToken(e.target.value)}
-              className="font-mono text-sm"
-            />
+            <div>
+              <label className="block text-sm font-medium mb-2">Mapbox Public Token</label>
+              <Input
+                placeholder="pk.eyJ1IjoieW91ci11c2VybmFtZSIsImEiOiJ5b3VyLXRva2VuIn0..."
+                value={mapboxToken}
+                onChange={(e) => setMapboxToken(e.target.value)}
+                className="font-mono text-sm"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">OpenWeather API Key</label>
+              <Input
+                placeholder="1234567890abcdef1234567890abcdef"
+                value={weatherApiKey}
+                onChange={(e) => setWeatherApiKey(e.target.value)}
+                className="font-mono text-sm"
+              />
+            </div>
+            
             <Button 
-              onClick={() => {/* Token validation could happen here */}}
-              className="w-full bg-gradient-to-r from-water-primary to-water-secondary hover:opacity-90"
+              onClick={() => {
+                if (mapboxToken && weatherApiKey) {
+                  localStorage.setItem('mapboxToken', mapboxToken);
+                  localStorage.setItem('weatherApiKey', weatherApiKey);
+                }
+              }}
+              disabled={!mapboxToken || !weatherApiKey}
+              className="w-full bg-gradient-to-r from-water-primary to-water-secondary hover:opacity-90 disabled:opacity-50"
             >
               Initialize Map
             </Button>
           </div>
           
-          <div className="mt-6 p-4 bg-muted rounded-md">
-            <p className="text-sm text-muted-foreground">
-              <strong>Need a token?</strong> Get your free Mapbox public token from{' '}
-              <a 
-                href="https://account.mapbox.com/access-tokens/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-water-primary hover:underline"
-              >
-                mapbox.com
-              </a>
-            </p>
+          <div className="mt-6 space-y-3">
+            <div className="p-4 bg-muted rounded-md">
+              <p className="text-sm text-muted-foreground">
+                <strong>Get Mapbox Token:</strong>{' '}
+                <a 
+                  href="https://account.mapbox.com/access-tokens/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-water-primary hover:underline"
+                >
+                  mapbox.com
+                </a>
+              </p>
+            </div>
+            <div className="p-4 bg-muted rounded-md">
+              <p className="text-sm text-muted-foreground">
+                <strong>Get Weather API:</strong>{' '}
+                <a 
+                  href="https://openweathermap.org/api" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-water-primary hover:underline"
+                >
+                  openweathermap.org
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -203,7 +325,7 @@ const MapContainer = () => {
       <div ref={mapContainer} className="absolute inset-0 pt-20" />
 
       {/* Weather Overlay */}
-      {showWeather && <WeatherOverlay map={map.current} />}
+      {showWeather && <WeatherOverlay map={map.current} apiKey={weatherApiKey} />}
 
       {/* Water Body Info Panel */}
       {selectedWaterBody && (
